@@ -1,5 +1,9 @@
 from typing import Any, Dict
 from langgraph.graph import StateGraph, START, END
+from agentmesh.logging_utils import NodeLogger
+
+logger = NodeLogger(enabled=True)
+
 
 def planner_node(state: Dict[str, Any], planner):
     todos = planner.plan(state)
@@ -35,12 +39,12 @@ def composer_node(state, composer):
 def build_agentmesh_graph(planner, router, executor, validator, composer):
     graph = StateGraph(dict)
 
-    graph.add_node("planner", lambda s: planner_node(s, planner))
-    graph.add_node("router", lambda s: router_node(s, router))
-    graph.add_node("executor", lambda s: executor_node(s, executor))
-    graph.add_node("validator", lambda s: validator_node(s, validator))
-    graph.add_node("composer", lambda s: composer_node(s, composer))
-    graph.add_node("increment_loop", increment_loop_node)
+    graph.add_node("planner", logger.wrap("planner", lambda s: planner_node(s, planner)))
+    graph.add_node("router", logger.wrap("router", lambda s: router_node(s, router)))
+    graph.add_node("executor", logger.wrap("executor", lambda s: executor_node(s, executor)))
+    graph.add_node("validator", logger.wrap("validator", lambda s: validator_node(s, validator)))
+    graph.add_node("composer", logger.wrap("composer", lambda s: composer_node(s, composer)))
+    graph.add_node("increment_loop", logger.wrap("increment_loop", increment_loop_node))
 
     # REQUIRED ENTRYPOINT
     graph.add_edge(START, "planner")

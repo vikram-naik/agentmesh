@@ -79,3 +79,30 @@ K1. Rate limiting
 K2. Secure MCP communication (TLS/JWT)
 K3. Observability exporters (Prometheus, OpenTelemetry)
 K4. Multi-tenancy support
+
+
+Recommended Sequence:
+
+Step 1: Add Debug Logging (A1)
+
+→ Safe, simple, helps everything else.
+
+Step 2: Introduce MCPToolProxy + async executor (C1 + C3)
+
+→ Moves architecture toward real-world deployment.
+
+Step 3: Rewrite executor to support DAG + dependencies (E1)
+
+→ Lays groundwork for parallel execution, multi-agent calls.
+
+Step 4: Rework Planner to read MCP tool schemas (D1)
+
+→ Huge reliability improvement.
+
+Step 5: Introduce UI for execution trace (B1)
+
+→ Developer productivity boost.
+
+Step 6: Add multi-agent support (G1)
+
+→ Begin A2A workflows.

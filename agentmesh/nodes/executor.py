@@ -5,6 +5,8 @@ class Executor:
         self.registry = registry
         self.retries = retries
         self.backoff = backoff
+        self.logger = None
+
 
     def execute(self, route):
         tool_name = route["tool"]
