@@ -2,17 +2,6 @@
 Version 1.0 — canonical project roadmap
 
 ## A. Observability, Logging & Debugging
-A1. Node-level structured debug logging:
-- Log before/after each node (planner, router, executor, validator, composer)
-- Log inputs/outputs
-- Log LLM prompt, response, token counts
-- Log latency per node
-- Store trace in memory and optional JSON file
-
-A2. Execution timeline export:
-- Export trace to Chrome Tracing format (.json)
-- Support spanning-tree view
-
 A3. Hardened error handling:
 - Graceful handling of planner/router/executor errors
 - Automatic JSON repair for planner
@@ -106,3 +95,6 @@ Step 5: Introduce UI for execution trace (B1)
 Step 6: Add multi-agent support (G1)
 
 → Begin A2A workflows.
+
+
+python -m examples.langgraph_document_search.run_graph_stream

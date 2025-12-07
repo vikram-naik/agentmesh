@@ -1,10 +1,19 @@
-# agentmesh/nodes/composer.py
+"""
+Composer node implementation.
+
+Composes the final answer from collected results using an LLM.
+"""
+
 import json
 
+
 class Composer:
+    """
+    Composer that summarizes results via an LLM.
+    """
+
     def __init__(self, llm, prompt_template=None):
         self.llm = llm
-        # fallback template
         self.prompt_template = prompt_template or """
 You are a summarizer agent.
 
@@ -14,10 +23,10 @@ User Query:
 Collected Tool Results:
 {results}
 
-Produce a concise final answer for the user.
+Produce a concise final answer.
 """
 
-    def compose(self, state: dict):
+    def compose(self, state):
         user_query = state.get("user_query", "")
         results = json.dumps(state.get("results", {}), indent=2)
 
@@ -26,5 +35,10 @@ Produce a concise final answer for the user.
             results=results,
         )
 
-        out = self.llm.generate(prompt, max_tokens=300, temperature=0.2)
-        return out.strip()
+        raw = self.llm.generate(prompt, max_tokens=300, temperature=0.2)
+        if isinstance(raw, dict):
+            text = raw.get("text", "")
+        else:
+            text = str(raw)
+
+        return text.strip()

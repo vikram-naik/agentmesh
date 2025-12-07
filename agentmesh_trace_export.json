@@ -1,0 +1,268 @@
+{
+  "traceEvents": [
+    {
+      "name": "planner",
+      "cat": "node",
+      "ph": "B",
+      "ts": 1765096868825534,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "user_query": "Search documents about inflation",
+        "results": {},
+        "todos": [],
+        "loops": 0,
+        "max_loops": 3
+      }
+    },
+    {
+      "name": "llm_planner",
+      "cat": "llm",
+      "ph": "i",
+      "ts": 1765096886627843,
+      "pid": 1,
+      "tid": 1,
+      "s": "t",
+      "args": {
+        "prompt": "\nYou are a workflow planner for an agentic system.\n\nYour role:\n- Analyze the user query and context\n- Produce a list of TODOS needed to answer the query\n- Each TODO must be a JSON object like:\n\n    {\n        \"task\": \"search\",\n        \"args\": {}\n    }\n\nReturn ONLY a JSON array, nothing else.\n\nUser Query:\nSearch documents about inflation\n\nContext:\n{}\n",
+        "response": "[\n    {\n        \"task\": \"search\",\n        \"args\": {\n            \"query\": \"inflation\"\n        }\n    }\n]",
+        "usage": {
+          "prompt_tokens": 90,
+          "completion_tokens": 29
+        }
+      }
+    },
+    {
+      "name": "planner",
+      "cat": "node",
+      "ph": "E",
+      "ts": 1765096886627847,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "todos": [
+          {
+            "task": "search",
+            "args": {
+              "query": "inflation"
+            }
+          }
+        ],
+        "results": {},
+        "loops": 0,
+        "max_loops": 3
+      }
+    },
+    {
+      "name": "router",
+      "cat": "node",
+      "ph": "B",
+      "ts": 1765096873395755,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "todos": [
+          {
+            "task": "search",
+            "args": {
+              "query": "inflation"
+            }
+          }
+        ],
+        "results": {},
+        "loops": 0,
+        "max_loops": 3
+      }
+    },
+    {
+      "name": "router",
+      "cat": "node",
+      "ph": "E",
+      "ts": 1765096886627850,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "todos": [
+          {
+            "todo": {
+              "task": "search",
+              "args": {
+                "query": "inflation"
+              }
+            },
+            "route": {
+              "tool": "document_search",
+              "args": {
+                "query": "inflation"
+              }
+            }
+          }
+        ],
+        "results": {},
+        "loops": 0,
+        "max_loops": 3
+      }
+    },
+    {
+      "name": "executor",
+      "cat": "node",
+      "ph": "B",
+      "ts": 1765096873396231,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "todos": [
+          {
+            "todo": {
+              "task": "search",
+              "args": {
+                "query": "inflation"
+              }
+            },
+            "route": {
+              "tool": "document_search",
+              "args": {
+                "query": "inflation"
+              }
+            }
+          }
+        ],
+        "results": {},
+        "loops": 0,
+        "max_loops": 3
+      }
+    },
+    {
+      "name": "executor",
+      "cat": "node",
+      "ph": "E",
+      "ts": 1765096886627853,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "results": {
+          "search": {
+            "ok": true,
+            "hits": [
+              "Japan fiscal stimulus increased during 2020 pandemic.",
+              "TCS reported revenue of 2024 was X (example).",
+              "Inflation affects disposable income."
+            ]
+          }
+        },
+        "todos": [],
+        "loops": 0,
+        "max_loops": 3
+      }
+    },
+    {
+      "name": "validator",
+      "cat": "node",
+      "ph": "B",
+      "ts": 1765096873396818,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "results": {
+          "search": {
+            "ok": true,
+            "hits": [
+              "Japan fiscal stimulus increased during 2020 pandemic.",
+              "TCS reported revenue of 2024 was X (example).",
+              "Inflation affects disposable income."
+            ]
+          }
+        },
+        "todos": [],
+        "loops": 0,
+        "max_loops": 3
+      }
+    },
+    {
+      "name": "validator",
+      "cat": "node",
+      "ph": "E",
+      "ts": 1765096886627857,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "done": true,
+        "results": {
+          "search": {
+            "ok": true,
+            "hits": [
+              "Japan fiscal stimulus increased during 2020 pandemic.",
+              "TCS reported revenue of 2024 was X (example).",
+              "Inflation affects disposable income."
+            ]
+          }
+        },
+        "loops": 0,
+        "max_loops": 3
+      }
+    },
+    {
+      "name": "composer",
+      "cat": "node",
+      "ph": "B",
+      "ts": 1765096873397280,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "done": true,
+        "results": {
+          "search": {
+            "ok": true,
+            "hits": [
+              "Japan fiscal stimulus increased during 2020 pandemic.",
+              "TCS reported revenue of 2024 was X (example).",
+              "Inflation affects disposable income."
+            ]
+          }
+        },
+        "loops": 0,
+        "max_loops": 3
+      }
+    },
+    {
+      "name": "llm_composer",
+      "cat": "llm",
+      "ph": "i",
+      "ts": 1765096886627860,
+      "pid": 1,
+      "tid": 1,
+      "s": "t",
+      "args": {
+        "prompt": "You are a summarizer. User query: \nResults: {\n  \"search\": {\n    \"ok\": true,\n    \"hits\": [\n      \"Japan fiscal stimulus increased during 2020 pandemic.\",\n      \"TCS reported revenue of 2024 was X (example).\",\n      \"Inflation affects disposable income.\"\n    ]\n  }\n}\nProduce a concise answer for the user.\n",
+        "response": "During the 2020 pandemic, Japan increased its fiscal stimulus. TCS reported revenue in 2024 (specific figure not provided), and inflation impacts disposable income.",
+        "usage": {
+          "prompt_tokens": 91,
+          "completion_tokens": 38
+        }
+      }
+    },
+    {
+      "name": "composer",
+      "cat": "node",
+      "ph": "E",
+      "ts": 1765096886627862,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "final_answer": "During the 2020 pandemic, Japan increased its fiscal stimulus. TCS reported revenue in 2024 (specific figure not provided), and inflation impacts disposable income.",
+        "results": {
+          "search": {
+            "ok": true,
+            "hits": [
+              "Japan fiscal stimulus increased during 2020 pandemic.",
+              "TCS reported revenue of 2024 was X (example).",
+              "Inflation affects disposable income."
+            ]
+          }
+        },
+        "todos": [],
+        "loops": 0
+      }
+    }
+  ]
+}

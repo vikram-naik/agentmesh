@@ -1,7 +1,20 @@
+"""
+Planner node implementation.
+
+Generates a list of TODOs (JSON) based on the user query and context.
+The planner exposes `.plan(state)` and expects `self.llm.generate(prompt, ...)`
+to return either a string or a dict with {"text": "...", "usage": {...}}.
+"""
+
 import json
 from agentmesh.runtimes.base_client import ModelClient
 
+
 class Planner:
+    """
+    Planner that uses an LLM to generate a list of todos.
+    """
+
     def __init__(self, llm: ModelClient):
         self.llm = llm
         self.prompt_template = """
@@ -10,9 +23,10 @@ You are a workflow planner for an agentic system.
 Your role:
 - Analyze the user query and context
 - Produce a list of TODOS needed to answer the query
-- Each TODO must be a JSON object:
+- Each TODO must be a JSON object like:
+
     {{
-        "task": "<name>",
+        "task": "search",
         "args": {{}}
     }}
 
@@ -31,12 +45,15 @@ Context:
             context=json.dumps(state.get("results", {}))
         )
 
-        out = self.llm.generate(prompt, max_tokens=300)
+        raw = self.llm.generate(prompt, max_tokens=300)
+        if isinstance(raw, dict):
+            text = raw.get("text", "")
+        else:
+            text = str(raw)
 
         try:
-            todos = json.loads(out)
+            todos = json.loads(text)
         except Exception:
-            # fallback: wrap output into single todo
-            todos = [{"task": "unknown", "args": {"raw": out}}]
+            todos = [{"task": "unknown", "args": {"raw": text}}]
 
         return todos
