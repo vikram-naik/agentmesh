@@ -1,0 +1,17 @@
+# Core graph + langchain ecosystem
+langgraph==1.0.4
+langchain==1.1.2
+
+# LLM & infra helpers
+requests==2.32.5
+python-dotenv==1.0.1
+pyyaml==6.0.1
+pydantic==2.7.4
+
+# Web server / streaming
+fastapi==0.124.0
+uvicorn==0.38.0
+
+# Vectors + numeric libs
+faiss-cpu==1.13.1
+numpy==1.26.4

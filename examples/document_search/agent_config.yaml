@@ -1,0 +1,21 @@
+planner:
+  model: qwen-4b
+  prompt_template: |
+    Analyze the user's question and produce a list of todos.
+    Return a JSON list of objects: [{"task":"...", "meta":{}}].
+
+    User query: {user_query}
+    Context: {context}
+
+router:
+  static_map:
+    "search": "document_search"
+    "doc": "document_search"
+
+composer:
+  model: qwen-8b
+  prompt_template: |
+    User asked: {user_query}
+    The following results were collected: {results}
+
+    Summarize into a clear and concise answer.

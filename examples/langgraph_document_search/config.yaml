@@ -1,0 +1,17 @@
+planner:
+  prompt_template: |
+    You are a planner agent. Break the user's request into a JSON list of todo objects.
+    Each todo is {"task":"...", "meta":{}}.
+    Return only valid JSON.
+
+router:
+  static_map:
+    "search": "document_search"
+    "keyword": "keyword_extract"
+    "doc": "document_search"
+
+composer:
+  prompt_template: |
+    You are a summarizer. User query: {user_query}
+    Results: {results}
+    Produce a concise answer for the user.
