@@ -15,3 +15,8 @@ uvicorn==0.38.0
 # Vectors + numeric libs
 faiss-cpu==1.13.1
 numpy==1.26.4
+
+# MCP Client
+httpx==0.28.1
+langchain-mcp-adapters
+websockets

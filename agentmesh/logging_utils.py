@@ -98,6 +98,22 @@ class NodeLogger:
             except Exception:
                 pass
 
+    def capture(self, event):
+        """
+        Capture a graph event into the trace buffer.
+        Newer versions of AgentMesh expect this API.
+        """
+        if not self.enabled:
+            return
+        self._add_trace(event)
+
+
+    def last_event(self):
+        if not self.keep_trace or not self.trace_buffer:
+            return {}
+        return self.trace_buffer[-1]
+
+
     # ------------------------------------------------------------------
     # LLM logging
     # ------------------------------------------------------------------

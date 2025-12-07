@@ -1,3 +1,0 @@
-document_search:
-  type: vector
-  index: "./sample_index"
