@@ -5,13 +5,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse, HTMLResponse
 
 from agentmesh.logging_utils import NodeLogger
-from agentmesh.nodes.planner import Planner
-from agentmesh.nodes.router import Router
-from agentmesh.nodes.executor import Executor
-from agentmesh.nodes.validator import Validator
-from agentmesh.nodes.composer import Composer
-from examples.langgraph_document_search.graph_agent import build_agentmesh_graph
-
 from agentmesh.runtimes.llama_cpp_client import LlamaLocalClient
 from pathlib import Path
 
@@ -37,30 +30,46 @@ logger = NodeLogger(True, sqlite_path=TRACE_DB)
 # APP SETUP
 # ----------------------------------------------------------------------
 
-app = FastAPI()
+from contextlib import asynccontextmanager
 
+# ----------------------------------------------------------------------
+# APP SETUP
+# ----------------------------------------------------------------------
+
+# Initialize Builder and Graph globally
 # LLM for planner & composer
 llm_url = "http://localhost:8081"
 planner_llm = LlamaLocalClient(llm_url)
 composer_llm = LlamaLocalClient(llm_url)
 
-# Nodes
-planner = Planner(planner_llm)
-validator = Validator(planner_llm)
-composer = Composer(composer_llm)
+# Builder refactor
+from agentmesh.builder import AgentBuilder
 
-# Executor auto-discovers MCP tools
-executor = Executor(mcp_urls=MCP_SERVERS)
+# Initialize Builder
+builder = AgentBuilder(logger=logger)
 
-# Router gets MCP tool list + schema (if later enabled)
-router = Router(
-    model_client=None,
-    static_map={"search": list(executor.tools.keys())[0]},  # fallback
-    mcp_tools=list(executor.tools.keys())
-)
+# Build MCP Manager (shared)
+builder.build_mcp_manager(MCP_SERVERS)
 
-graph = build_agentmesh_graph(planner, router, executor, validator, composer, logger)
-# logger.attach_graph(graph)
+# Build Nodes
+builder.build_nodes(planner_llm, composer_llm)
+
+# Compile Graph
+graph = builder.compile_graph()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Ensure MCP tools are loaded (async)
+    if builder.mcp_manager:
+        print("Loading MCP tools...")
+        try:
+             await builder.mcp_manager.load_tools()
+             print(f"Loaded tools: {builder.mcp_manager.list_tools()}")
+        except Exception as e:
+             print(f"Error loading MCP tools: {e}")
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 # ----------------------------------------------------------------------
 @app.post("/query")
@@ -68,8 +77,8 @@ async def query(payload: dict):
     q = payload.get("query", "")
     state = {"user_query": q, "results": {}, "todos": [], "loops": 0, "max_loops": 3}
 
-    def run():
-        for event in graph.stream(state):
+    async def run():
+        async for event in graph.astream(state):
             if event:
                 logger.capture(event)
             yield json.dumps(logger.last_event(), indent=2) + "\n"

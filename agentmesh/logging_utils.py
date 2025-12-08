@@ -179,6 +179,51 @@ class NodeLogger:
 
         return wrapped
     
+    def wrap_async(self, name: str, fn):
+        """Asynchronous wrapper for async nodes."""
+        async def wrapped(state, *args, **kwargs):
+            if not self.enabled:
+                return await fn(state, *args, **kwargs)
+
+            start = time.time()
+
+            entry_start = {
+                "event": "node_start",
+                "node": name,
+                "state_in": state,
+                "ts": start,
+            }
+            print(f"[AgentMesh][{name}][start] {json.dumps(entry_start, indent=2)}")
+            self._add_trace(entry_start)
+
+            try:
+                result = await fn(state, *args, **kwargs)
+                duration = time.time() - start
+
+                entry_end = {
+                    "event": "node_end",
+                    "node": name,
+                    "state_out": result,
+                    "duration_s": f"{duration:.3f} s",
+                }
+                print(f"[AgentMesh][{name}][end] {json.dumps(entry_end, indent=2)}")
+                self._add_trace(entry_end)
+                return result
+
+            except Exception as e:
+                duration = time.time() - start
+                entry_err = {
+                    "event": "node_error",
+                    "node": name,
+                    "error": str(e),
+                    "duration_s": f"{duration:.3f} s",
+                }
+                print(f"[AgentMesh][{name}][error] {json.dumps(entry_err, indent=2)}")
+                self._add_trace(entry_err)
+                raise
+
+        return wrapped
+    
     def export_chrome_trace(self, path: str = "agentmesh_trace.json"):
         """
         Export the in-memory trace buffer into Chrome Tracing JSON format.

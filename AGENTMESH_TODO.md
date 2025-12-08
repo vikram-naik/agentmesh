@@ -98,3 +98,5 @@ Step 6: Add multi-agent support (G1)
 
 
 python -m examples.langgraph_document_search.run_graph_stream
+
+curl -N -X POST http://localhost:9090/query   -H "Content-Type: application/json"   -d '{"query": "Search documents about inflation"}'
