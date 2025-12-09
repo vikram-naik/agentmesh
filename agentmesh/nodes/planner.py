@@ -1,16 +1,15 @@
 """
-Planner node implementation.
+Planner Node
+------------
+Role: STRATEGIST / ARCHITECT
 
-Generates a list of TODOs (JSON) based on the user query and context.
-The planner exposes `.plan(state)` and expects `self.llm.generate(prompt, ...)`
-to return either a string or a dict with {"text": "...", "usage": {...}}.
+The Planner's responsibility is HIGH-LEVEL problem decomposition.
+It analyzes the user's intent and breaks it down into coarse-grained "Todos" or goals.
+It has visibility into *available* tools but should focus on "What needs to be done" rather than "How strictly to call every API".
+
+Output:
+- A list of `Todo` items (intent + high-level arguments).
 """
-
-import json
-from agentmesh.runtimes.base_client import ModelClient
-from agentmesh.nodes.base import BaseNode
-from agentmesh.mcp.mcp_manager import MCPManager
-from typing import Optional
 
 import json
 import re
@@ -27,8 +26,7 @@ logger = logging.getLogger("agentmesh.nodes.planner")
 
 class Planner(BaseNode):
     """
-    Planner that uses an LLM to generate a list of todos.
-    Async-first implementation with robust parsing and standardized context.
+    Planner node implementation.
     """
 
     def __init__(self, llm: ModelClient, mcp_manager: Optional[MCPManager] = None, config: Optional[AgentMeshConfig] = None):
@@ -37,7 +35,8 @@ class Planner(BaseNode):
 
     async def plan(self, state: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
-        Generates a plan asynchronously.
+        Generates a high-level plan (list of Todos) based on the state.
+        Focuses on strategy, not granular API choreography.
         
         Args:
             state: The current state dictionary.

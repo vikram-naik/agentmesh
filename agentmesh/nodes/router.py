@@ -1,7 +1,16 @@
-# agentmesh/nodes/router.py
 """
-Router for AgentMesh — routes TODOS → tool invocations.
-Async implementation.
+Router Node
+-----------
+Role: TACTICAL REFINER / TOOL EXPERT
+
+The Router's responsibility is to bridge the gap between High-Level Intent (Planner) and Specific Tool Execution (Executor).
+While the Planner says "Book a flight", the Router knows that effectively means:
+1. Call `auth_service` to get token.
+2. Call `flight_search_api` with token.
+
+Future Vision:
+- This node will handle Dependency Resolution and Tool Choreography.
+- It can expand a single "Todo" into a sequences of atomic Tool Calls.
 """
 
 import json
@@ -31,8 +40,14 @@ class Router(BaseNode):
 
     async def route(self, todo: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Determines the route (tool + args) for a given TODO item.
-        Async method.
+        Refines a Todo into an executable Route.
+        
+        Current Logic:
+        - Maps task name to Tool name (MCP or LLM).
+        
+        Future Logic:
+        - Expand semantic intent into specific tool chains.
+        - Validate argument dependencies from previous context.
         """
         todo_args = todo.get("args", {}) or {}
         task_raw = (todo.get("task") or "").strip()

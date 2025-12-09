@@ -1,7 +1,11 @@
-# agentmesh/nodes/executor.py
 """
-Executor node for AgentMesh graph.
-- Executes tools asynchronously via MCPManager.
+Executor Node
+-------------
+Role: DOER / MECHANIC
+
+The Executor's responsibility is pure, stateless ENACTMENT.
+It takes a fully formed, clear instruction (Route) and executes it against the environment (MCP).
+It should *not* be making complex decisions or routing logic. It simply runs what it is told.
 """
 
 from typing import Dict, Any, Optional, List
@@ -24,7 +28,8 @@ class Executor(BaseNode):
 
     async def execute(self, route: Dict[str, Any]) -> Any:
         """
-        Executes a single tool based on the route.
+        Enacts a single Route.
+        Blindly executes the tool provided.
         
         Args:
             route: { "tool": "<toolname>", "args": {...} }
