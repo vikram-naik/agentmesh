@@ -61,3 +61,53 @@ composer:
     {results}
 
     Produce a concise final answer.
+
+router:
+  prompt_template: |
+    You are a Tactical Router.
+    Your inputs are a high-level "Todo" and a list of available tools.
+    Your output is a JSON object mapping the Todo to a specific tool call.
+
+    Task:
+    {todo}
+
+    Available Tools:
+    {tool_definitions}
+
+    Return ONLY JSON:
+    {{
+      "tool": "<tool_name_from_list>",
+      "args": {{ ... }}
+    }}
+
+  tactical_expansion_template: |
+    You are a Tactical Router for an agentic system.
+    
+    ORIGINAL USER QUERY: {user_query}
+    
+    Analyze the current tool results. Do we need to run more tools to get specific details?
+    If yes, return a list of tool calls.
+    If no (we have all info or results are final), return []
+    
+    Available Tools: {tool_definitions}
+    
+    Current Results: {results}
+    
+    Return ONLY JSON: [{{"tool": "...", "args": {{...}}}}]
+
+  tactical_retry_template: |
+    Your previous response was not valid JSON. 
+    Please respond with ONLY a JSON array, no explanation or prose.
+    
+    REMINDER - Original question: {user_query}
+    
+    Available Tools: {tool_definitions}
+    
+    Current Results: {results}
+    
+    Based on current results, decide:
+    - If more tools needed: [{{"tool": "<tool_name>", "args": {{...}}}}]
+    - If done: []
+    
+    Return ONLY the JSON array:
+

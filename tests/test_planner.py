@@ -48,8 +48,9 @@ class TestPlannerAsync(unittest.IsolatedAsyncioTestCase):
         state = {"user_query": "hello", "history": []}
         
         # Act
-        plan = await planner.plan(state)
+        output = await planner.run(state)
         
-        # Assert
-        self.assertEqual(len(plan), 1)
-        self.assertEqual(plan[0]["task"], "test")
+        # Assert (Planner returns {"todos": [...]})
+        todos = output["todos"]
+        self.assertEqual(len(todos), 1)
+        self.assertEqual(todos[0]["task"], "test")

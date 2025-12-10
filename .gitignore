@@ -2,3 +2,4 @@
 __pycache__
 faiss_index
 ./agentmesh_trace_export.json
+examples/mcp_server/demo.db

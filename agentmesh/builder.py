@@ -15,50 +15,53 @@ from langgraph.graph import StateGraph, START, END
 # --- Standard Async Node Wrappers ---
 
 async def _planner_node(state, planner: Planner):
+    output = await planner.run(state) # returns {"todos":List[...]}
     return {
-        "todos": await planner.plan(state),
+        "todos": output.get("todos", []),
         "results": state.get("results", {}),
         "loops": state.get("loops", 0),
         "max_loops": state.get("max_loops", 3),
+        "user_query": state.get("user_query", ""),
     }
 
 async def _router_node(state, router: Router):
-    routed = []
-    # Route each todo
-    for t in state.get("todos", []):
-         route = await router.route(t)
-         routed.append({"todo": t, "route": route})
-         
+    # Delegate to Router.run logic
+    output = await router.run(state)
+    
+    # Ensure keys are preserved
     return {
-        "todos": routed,
-        "results": state.get("results", {}),
+        "todos": output.get("todos", []),
+        "results": state.get("results", {}), # preserved
+        "tactical_status": output.get("tactical_status", "DONE"),
         "loops": state.get("loops", 0),
         "max_loops": state.get("max_loops", 3),
+        "user_query": state.get("user_query", ""),
     }
 
 async def _executor_node(state, executor: Executor):
-    results = dict(state.get("results", {}))
-    # 'todos' here are the routed items from Router
-    for item in state.get("todos", []):
-        task_name = item["todo"].get("task", "unknown")
-        route = item.get("route")
-        if route:
-            # Execute async
-            out = await executor.execute(route)
-            results[task_name] = out
-            
+    # Executor methods are a bit unique because they might need to iterate.
+    # But now we defined executor.run(state) as well.
+    # However, executor.run is defined to "iterate routed items".
+    # Let's try to use executor.run(state) if possible.
+    
+    output = await executor.run(state) 
+    # output = {"results": updated_results}
+    
     return {
-        "results": results,
-        "todos": [],
+        "results": output.get("results", {}),
+        "todos": [], # Clear routed todos after execution
         "loops": state.get("loops", 0),
         "max_loops": state.get("max_loops", 3),
+        "user_query": state.get("user_query", ""),
     }
 
 async def _validator_node(state, validator: Validator):
-    done, info = await validator.validate(state)
+    output = await validator.run(state)
+    # output = {"done": bool, "validator_info": dict}
     
-    # Merge info (reason, hints) into a special key or directly into results?
-    # Ideally we put it in results["_validator"] for the Planner to see next loop.
+    done = output.get("done", False)
+    info = output.get("validator_info", {})
+    
     results = dict(state.get("results", {}))
     results["_validator"] = info
     
@@ -67,6 +70,7 @@ async def _validator_node(state, validator: Validator):
         "results": results,
         "loops": state.get("loops", 0),
         "max_loops": state.get("max_loops", 3),
+        "user_query": state.get("user_query", ""),
     }
 
 async def _increment_loop_node(state):
@@ -75,12 +79,15 @@ async def _increment_loop_node(state):
         "todos": [],
         "loops": state.get("loops", 0) + 1,
         "max_loops": state.get("max_loops", 3),
+        "user_query": state.get("user_query", ""),
     }
 
 async def _composer_node(state, composer: Composer):
-    final_ans = await composer.compose(state)
+    output = await composer.run(state)
+    # output = {"final_answer": str}
+    
     return {
-        "final_answer": final_ans,
+        "final_answer": output.get("final_answer"),
         "results": state.get("results", {}),
         "todos": [],
         "loops": state.get("loops", 0),
@@ -201,8 +208,18 @@ class AgentBuilder:
         # Edges
         graph.add_edge(START, "planner")
         graph.add_edge("planner", "router")
-        graph.add_edge("router", "executor")
-        graph.add_edge("executor", "validator")
+        
+        # New Tactical Loop Logic:
+        # Router -> [Conditional: ExecuteMore | Validator]
+        
+        graph.add_conditional_edges(
+            "router",
+            lambda st: "continue" if st.get("tactical_status") == "CONTINUE" else "done",
+            {"continue": "executor", "done": "validator"}
+        )
+        
+        # Executor -> Router (The tactical feed back loop)
+        graph.add_edge("executor", "router")
 
         graph.add_conditional_edges(
             "validator",

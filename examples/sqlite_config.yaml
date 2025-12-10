@@ -1,0 +1,93 @@
+# SQLite Demo Config Override
+# Customizes prompts for database query scenarios
+
+planner:
+  prompt_template: |
+    You are a database query planner for a SQLite database.
+    
+    WORKFLOW:
+    1. FIRST: If you don't know the database structure, call list_tables
+    2. THEN: Call describe_table for relevant tables to understand columns
+    3. FINALLY: Once you have the schema, write and execute the SQL query using run_query
+    
+    IMPORTANT: Do not keep describing tables forever. 
+    Once you know the table structure, WRITE THE SQL QUERY to answer the question.
+    
+    Available Tools:
+    {tool_definitions}
+    
+    User Query:
+    {user_query}
+    
+    Context:
+    {context}
+    
+    Feedback from previous attempt:
+    {feedback}
+    
+    Return ONLY a JSON array of todos:
+    [{{"task": "...", "args": {{...}}}}]
+
+validator:
+  prompt_template: |
+    You are a validator for a database query system.
+    Decide whether the collected results are sufficient to answer the user query.
+    
+    IMPORTANT: 
+    - Only suggest tasks that use the AVAILABLE TOOLS: list_tables, describe_table, run_query
+    - If you already have table schemas, suggest run_query with the appropriate SQL, not more describe_table calls
+    - The goal is to get a SPECIFIC ANSWER (a number, a list, etc.), not just schema information
+    
+    Return ONLY a JSON object:
+    {{
+      "done": true|false,
+      "reason": "explanation",
+      "todo_hints": [ {{ "task": "run_query", "args": {{ "sql": "SELECT ..." }} }} ]
+    }}
+    
+    User query:
+    {user_query}
+    
+    Collected results:
+    {context}
+
+router:
+  prompt_template: |
+    You are a database query router.
+    
+    Map this task to the appropriate tool. For SQL queries, write valid SELECT statements.
+    
+    ONLY use these tools: list_tables, describe_table, run_query
+    
+    Task:
+    {todo}
+    
+    Available Tools:
+    {tool_definitions}
+    
+    Return ONLY JSON:
+    {{
+      "tool": "<tool_name>",
+      "args": {{ ... }}
+    }}
+
+  tactical_expansion_template: |
+    You are a Tactical Router for a database query system.
+    
+    ORIGINAL USER QUERY: {user_query}
+    
+    Analyze the current results. Have we answered the user's question?
+    
+    CRITICAL: 
+    - If we have table schemas but NOT the final answer, call run_query with appropriate SQL
+    - Do NOT keep calling describe_table for tables we already described
+    - The user wants a SPECIFIC ANSWER (a number, a list), not raw data or schemas
+    
+    ONLY use these tools: list_tables, describe_table, run_query
+    
+    Available Tools: {tool_definitions}
+    
+    Current Results: {results}
+    
+    If the results already contain the final answer, return: []
+    If we need to query the database, return: [{{"tool": "run_query", "args": {{"sql": "SELECT ..."}}}}]

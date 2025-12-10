@@ -33,8 +33,17 @@ class Planner(BaseNode):
         super().__init__(mcp_manager, config)
         self.llm = llm
 
-    async def plan(self, state: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
+        Executes the Planner logic.
+        Returns state update with new 'todos'.
+        """
+        todos = await self._plan_internal(state)
+        return {"todos": todos}
+
+    async def _plan_internal(self, state: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Internal planning logic.
         Generates a high-level plan (list of Todos) based on the state.
         Focuses on strategy, not granular API choreography.
         

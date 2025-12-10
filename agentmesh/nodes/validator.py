@@ -30,9 +30,17 @@ class Validator(BaseNode):
         self.model = model_client
         self.rules = rules or []
 
-    async def validate(self, state: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+    async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Determines if the task is done.
+        Executes Validation logic.
+        Returns: {"done": bool, "info": dict} (to be merged by graph)
+        """
+        done, info = await self._validate_internal(state)
+        return {"done": done, "validator_info": info}
+
+    async def _validate_internal(self, state: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+        """
+        Internal validation logic.
         Returns: (done: bool, info: dict)
         """
         # 1. Rule-based validation (Synchronous for now)

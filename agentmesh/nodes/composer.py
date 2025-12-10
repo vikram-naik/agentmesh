@@ -29,9 +29,16 @@ class Composer(BaseNode):
         super().__init__(mcp_manager, config)
         self.llm = llm
 
-    async def compose(self, state: Dict[str, Any]) -> str:
+    async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generates the final answer.
+        Executes Composer logic.
+        """
+        answer = await self._compose_internal(state)
+        return {"final_answer": answer}
+
+    async def _compose_internal(self, state: Dict[str, Any]) -> str:
+        """
+        Internal: Generates the final answer.
         """
         user_query = state.get("user_query", "")
         results = json.dumps(state.get("results", {}), indent=2)

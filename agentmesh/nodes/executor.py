@@ -81,8 +81,22 @@ class Executor(BaseNode):
             route = item.get("route")
             if route:
                 task_name = item.get("todo", {}).get("task", "unknown")
+                tool_name = route.get("tool", task_name)
+                args = route.get("args", {})
+                
+                # Generate unique key to prevent overwrites
+                # Use tool name + short hash of serialized args
+                if args:
+                    import hashlib
+                    import json
+                    args_str = json.dumps(args, sort_keys=True)
+                    args_hash = hashlib.md5(args_str.encode()).hexdigest()[:8]
+                    result_key = f"{tool_name}_{args_hash}"
+                else:
+                    result_key = tool_name
+                
                 output = await self.execute(route)
-                results[task_name] = output
+                results[result_key] = output
                 
         return {"results": results}
 
